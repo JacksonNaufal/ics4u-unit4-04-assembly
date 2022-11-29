@@ -8,79 +8,71 @@
 ; Since: 2022-11-22
 ; -------------------------------------------------------------
 
-SYS_WRITE equ 1 ; write to _
-SYS_EXIT equ 60 ; end program
-STDOUT equ 1    ; standard output
 
 section .bss
-  length equ 2     ; length                 
-  len resb length  ; hold numbers           
+    someNumber: RESD 1
 
 section .data
-  newline: db 10                        ; new line      
-  newlineLen: equ $-newline             ; length of the new line
-  opening: db "Printing 0-9...", 10     ; first line
-  openingLen: equ $-opening             ; opening
-  done: db "Done.", 10                  ; second line            
-  doneLen: equ $-done                   ; length of done
+    
+    ; constants here
+    newLine: db 10
+    done: db 10, "Done.", 10
+    doneLen: equ $-done
 
 section .text
   global_start:                         ; entry point
 
   _start:
-    ; prints the opening of the program
-    mov rax, SYS_WRITE
-    mov rdi, STDOUT
-    mov rsi, opening
-    mov rdx, openingLen
+
+    mov r8, -1
+    mov r9, 9 - 1
+
+    IncrementalLabel:
+
+        ; doing a do while loop
+        inc r8
+        push r8
+        call PrintSingleDigitInt
+        add rsp, 4
+        cmp r8, 9 -1
+        jle IncrementalLabel
+
+
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, done
+    mov rdx, doneLen
     syscall
 
-    ; prints the new line
-    mov rax, SYS_WRITE
-    mov rdi, STDOUT
-    mov rsi, newline
-    mov rdx, newlineLen
-    syscall
-
-    mov r8, 48
-
-    loop:
-    mov [len], r8
-
-    inc r8
 
     ; prints new line
-    mov rax, SYS_WRITE
-    mov rdi, STDOUT
-    mov rsi, len
-    mov rdx, length
+    mov rax, 60
+    mov rdi, 0
     syscall
 
-    mov rax, SYS_WRITE
-    mov rdi, STDOUT
-    mov rsi, newline
-    mov rdx, newlineLen
-    syscall
+PrintSingleDigitInt:
 
-    ; loop
-    cmp r8, 57
-    jle loop   
-
-    ; prints new line
-    mov rax, SYS_WRITE
-    mov rdi, STDOUT
-    mov rsi, newline
-    mov rdx, newlineLen
-    syscall
+    pop r14
+    pop r15
+    add r15, 48
+    push r15
 
     ; prints done
-    mov rax, SYS_WRITE        
-    mov rdi, STDOUT           
-    mov rsi,done            
-    mov rdx,doneLen           
+    mov rax, 1   
+    mov rdi, 1           
+    mov rsi, rsp            
+    mov rdx, 1           
     syscall                   
 
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, newLine
+    mov rdx, 1
+    syscall
+
+    push r14
+    ret
     ; ends the program
-    mov rax, SYS_EXIT
+    mov rax, 1
     mov rdi, 0
     syscall
